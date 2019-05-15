@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hero - Admin</title>
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.css">
+    <style>
+        .hero-list img {
+            width: 50px;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="page-header container">
+            <h1>王者荣耀 <small>英雄管理器</small></h1>
+        </div>
+    </header>
+    <div class="container hero-list">
+        <form id="form" method="POST" action="/edit">
+            <!--在对页面进行渲染的时候 已经将id渲染到了这个隐藏域中-->
+            <!--如果没有这个隐藏域,则在post请求时 是获取不到id的-->
+            <input type="hidden" name="id" value="{{id}}">
+            <table class="table table-hover">
+                <tr>
+                    <td>姓名：</td>
+                    <td><input type="text" value="{{name}}" id="name" name="name"></td>
+                </tr>
+                <tr>
+                    <td>性别：</td>
+                    <td>
+                        {{if(gender == "男")}}
+                            <input id="nan" name="gender" checked value="男" type="radio"><label for="nan">男</label> <input name="gender"
+                            value="女" type="radio" id="nv"><label for="nv">女</label>
+                        {{else}}
+                            <input id="nan" name="gender" value="男" type="radio"><label for="nan">男</label> <input name="gender"
+                            value="女" type="radio" checked id="nv"><label for="nv">女</label>
+                        {{/if}}
+                    </td>
+                </tr>
+                <!-- <tr>
+                    <td>头像：</td>
+                    <td><img id="preImg" src="/img/{{img}}" alt=""><input type="file" id="img" name="img"></td>
+                </tr> -->
+                <tr>
+                    <td></td>
+                    <td><input type="submit" id="btn"></td>
+                </tr>
+            </table>
+        </form>
+    </div>
+</body>
+<script src="/node_modules/jquery/dist/jquery.min.js"></script>
+<script>
+    $("#img").on("change",function(){
+        //创建formData对象
+        var fd = new FormData();
+        //添加参数  append("key","value")
+        fd.append("img",document.getElementById("img").files[0]);
+
+        //当我们选择好图片以后，需要选择的图片上传的服务器
+        $.ajax({
+            url: "/postUpload",
+            type: "POST",
+            data: fd,
+            contentType: false,// 当有文件要上传时，此项是必须的，否则后台无法识别文件流的起始位置(详见：#1)
+            processData: false,// 是否序列化data属性，默认true(注意：false时type必须是post，详见：#2)
+            dataType: "JSON",
+            success: function(res){// {statu: 1,msg:"失败"} {statu:0,msg:"成功",img:"upload_laskjflkwejflasjldfj"}
+                if(res.statu==0) {
+                    //将图片名称设置给img
+                    $("#preImg").attr("src","/img/" + res.img);
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    })
+
+    $("#btn").on("click",function(e){
+        e.preventDefault();
+        //将所有的数据参数提交到服务器
+        var data = $("#form").serialize();//这个方法中得到的参数有name,age,gender
+        //serialize不在会提交input type=file中的内容
+        data += "&img=" + $("#preImg").attr("src");
+        //将参数提交到服务器
+        $.ajax({
+            url: "/edit",
+            type: "POST",
+            data: data,
+            dataType: "JSON",
+            success: function(result) {
+                if(result.statu == 0) {
+                    alert(result.msg);
+                    window.location = "/";
+                }else {
+                    alert(result.msg);
+                }
+            }
+        });
+    });
+</script>
+</html>
